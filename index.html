@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Will you be my Valentine?</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;800&display=swap" rel="stylesheet">
+  <meta name="description" content="Will you be my Valentine?">
+
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #0e0e0e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    video {
+      width: 360px;
+      /* 👈 same GIF-style size */
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+    }
+
+    #hint {
+      position: absolute;
+      bottom: 20px;
+      color: #aaa;
+      font-size: 14px;
+    }
+  </style>
+
+
+  <style>
+    :root {
+      --bg1: #ffd6e7;
+      --bg2: #ffeef6;
+      --card: #ffffffcc;
+      --yes: #ff3b7a;
+      --yesHover: #ff1f68;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      font-family: 'Playfair Display', serif;
+      padding: 16px;
+    }
+
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .card {
+      width: min(720px, 92vw);
+      padding: 26px 22px;
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border-radius: 22px;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .15);
+    }
+
+    .art-container {
+      width: min(340px, 100%);
+      aspect-ratio: 340 / 280;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto;
+    }
+
+    .art {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 44px);
+      margin: 12px 0 18px;
+    }
+
+    .button-zone {
+      position: relative;
+      width: min(520px, 92%);
+      height: 150px;
+      margin: 0 auto;
+      touch-action: none;
+    }
+
+    button {
+      position: absolute;
+      top: 50%;
+      padding: 16px 24px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, .14);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .12s ease, background .12s ease;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    #yesBtn {
+      left: 50%;
+      transform: translate(-120%, -50%);
+      background: var(--yes);
+      color: #fff;
+    }
+
+    #yesBtn:hover {
+      background: var(--yesHover);
+    }
+
+    #noBtn {
+      left: 50%;
+      transform: translate(20%, -50%);
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    .result {
+      display: none;
+      margin-top: 18px;
+      animation: pop .35s ease;
+      max-height: 60vh;
+      overflow: hidden;
+      width: 100%;
+      text-align: center;
+    }
+
+    .result h2 {
+      font-size: clamp(30px, 4.5vw, 46px);
+      margin: 10px 0;
+    }
+
+    .fireworks {
+      width: min(380px, 70vw);
+      max-height: 55vh;
+      height: auto;
+      object-fit: contain;
+      margin: 12px auto;
+      display: block;
+      border-radius: 16px;
+    }
+
+    @keyframes pop {
+      from {
+        transform: scale(.96);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .art {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════ LOGIN OVERLAY ═══════════ -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="floating-hearts" aria-hidden="true">
+      <span class="fh">💕</span><span class="fh">💗</span><span class="fh">💖</span>
+      <span class="fh">❤️</span><span class="fh">💘</span><span class="fh">💝</span>
+      <span class="fh">🩷</span><span class="fh">💓</span><span class="fh">💞</span>
+    </div>
+    <div class="login-card">
+      <div class="login-icon">💌</div>
+      <h2 class="login-title">Hey there, beautiful!</h2>
+      <p class="login-subtitle">What's your name?</p>
+      <input type="text" id="nameInput" class="login-input" placeholder="Enter your name..." autocomplete="off"
+        autofocus />
+      <button id="loginBtn" class="login-btn">
+        <span>Login</span> <span class="login-heart">❤️</span>
+      </button>
+    </div>
+  </div>
+
+  <style>
+    /* ── Login Overlay ── */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 30% 20%, #ffe0ec, #ffc0d8 40%, #ffaac8 80%);
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+      padding: 16px;
+    }
+
+    .login-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* ── Floating hearts ── */
+    .floating-hearts {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .fh {
+      position: absolute;
+      font-size: 28px;
+      opacity: 0.35;
+      animation: floatUp linear infinite;
+    }
+
+    .fh:nth-child(1) {
+      left: 5%;
+      animation-duration: 7s;
+      animation-delay: 0s;
+      font-size: 22px;
+    }
+
+    .fh:nth-child(2) {
+      left: 15%;
+      animation-duration: 9s;
+      animation-delay: 1s;
+      font-size: 30px;
+    }
+
+    .fh:nth-child(3) {
+      left: 28%;
+      animation-duration: 8s;
+      animation-delay: 0.5s;
+      font-size: 26px;
+    }
+
+    .fh:nth-child(4) {
+      left: 40%;
+      animation-duration: 10s;
+      animation-delay: 2s;
+      font-size: 34px;
+    }
+
+    .fh:nth-child(5) {
+      left: 55%;
+      animation-duration: 7.5s;
+      animation-delay: 0.8s;
+      font-size: 24px;
+    }
+
+    .fh:nth-child(6) {
+      left: 65%;
+      animation-duration: 9.5s;
+      animation-delay: 1.5s;
+      font-size: 28px;
+    }
+
+    .fh:nth-child(7) {
+      left: 75%;
+      animation-duration: 8.5s;
+      animation-delay: 0.3s;
+      font-size: 20px;
+    }
+
+    .fh:nth-child(8) {
+      left: 85%;
+      animation-duration: 11s;
+      animation-delay: 2.5s;
+      font-size: 32px;
+    }
+
+    .fh:nth-child(9) {
+      left: 93%;
+      animation-duration: 7s;
+      animation-delay: 1.2s;
+      font-size: 26px;
+    }
+
+    @keyframes floatUp {
+      0% {
+        bottom: -10%;
+        opacity: 0;
+        transform: translateX(0) rotate(0deg);
+      }
+
+      10% {
+        opacity: 0.35;
+      }
+
+      90% {
+        opacity: 0.35;
+      }
+
+      100% {
+        bottom: 110%;
+        opacity: 0;
+        transform: translateX(40px) rotate(25deg);
+      }
+    }
+
+    /* ── Login Card ── */
+    .login-card {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 28px;
+      padding: 44px 36px 38px;
+      width: min(420px, 90vw);
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(200, 60, 100, 0.18), 0 2px 12px rgba(0, 0, 0, 0.06);
+      animation: pop .45s ease;
+    }
+
+    .login-icon {
+      font-size: 52px;
+      margin-bottom: 10px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .login-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(22px, 4vw, 34px);
+      color: #d6336c;
+      margin: 0 0 6px;
+    }
+
+    .login-subtitle {
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+      color: #b84d6e;
+      margin: 0 0 24px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 17px;
+      font-family: 'Playfair Display', serif;
+      border: 2px solid #f5c6d8;
+      border-radius: 14px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.7);
+      color: #333;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      text-align: center;
+    }
+
+    .login-input::placeholder {
+      color: #d4a0b5;
+    }
+
+    .login-input:focus {
+      border-color: #ff6b9d;
+      box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.15);
+    }
+
+    .login-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 22px;
+      padding: 16px 42px;
+      font-size: 18px;
+      font-weight: 800;
+      font-family: 'Playfair Display', serif;
+      color: #fff;
+      background: linear-gradient(135deg, #ff6b9d, #ff3b7a);
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 8px 28px rgba(255, 59, 122, 0.35);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      left: auto;
+      top: auto;
+      transform: none;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 12px 36px rgba(255, 59, 122, 0.45);
+    }
+
+    .login-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .login-heart {
+      display: inline-block;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.25);
+      }
+    }
+  </style>
+  <!-- ═══════════ END LOGIN OVERLAY ═══════════ -->
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <main class="card" id="mainCard" style="display:none;">
+    <div class="art-container">
+      <img src="img/bunnies.svg" alt="Bunnies" class="art">
+    </div>
+
+    <h1 id="question"></h1>
+
+    <section class="button-zone" id="zone">
+      <button id="yesBtn">Yes</button>
+      <button id="noBtn">No</button>
+    </section>
+
+    <div class="hint" id="hint"></div>
+
+    <section class="result" id="result">
+      <h2>Congradulations🎉From now on,you're my Valentine❤️.</h2>
+      <img class="fireworks"
+        src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHFxZHV5cHpxMmVrZnVoc2Via3E0d3kxNnhveHN0ajR1cW85NnpicCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7iZQzo9r0LcFnP0nnm/giphy.gif"
+        alt="Celebration GIF" />
+      <h3>I knew you would say Yes❤️</h3>
+    </section>
+
+  </main>
+
+  <script>
+    /* ── Login Logic ── */
+    const loginOverlay = document.getElementById('loginOverlay');
+    const nameInput = document.getElementById('nameInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const mainCard = document.getElementById('mainCard');
+
+    function handleLogin() {
+      const enteredName = nameInput.value.trim();
+      if (!enteredName) {
+        nameInput.style.borderColor = '#ff3b3b';
+        nameInput.setAttribute('placeholder', 'Please enter your name 💗');
+        nameInput.focus();
+        return;
+      }
+      if (!/^[A-Za-z\s]+$/.test(enteredName)) {
+        nameInput.style.borderColor = '#ff3b3b';
+        nameInput.value = '';
+        nameInput.setAttribute('placeholder', 'Letters only please! 💗');
+        nameInput.focus();
+        return;
+      }
+      // Save name to Google Sheets
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm_Qz4K82c5c3MjVAbyXZEhDIldCAgquk3XTLs7GhO999ydk0hpwonch4-U0LXst_2IQ/exec'; // ← Replace with your Apps Script URL
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: enteredName })
+      }).catch(() => { });  // silently fail if offline
+
+      // Set the question with the entered name
+      document.getElementById('question').textContent = `${enteredName}, will you be my Valentine?`;
+      document.querySelector('#result h2').textContent = `Congratulations ${enteredName}🎉 From now on, you're my Valentine❤️`;
+
+      // Fade out login, show main card
+      loginOverlay.classList.add('hidden');
+      mainCard.style.display = '';
+      mainCard.style.animation = 'pop .45s ease';
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    nameInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleLogin();
+      // Reset border on typing
+      nameInput.style.borderColor = '#f5c6d8';
+    });
+
+    /* ── Main Page Logic ── */
+    const zone = document.getElementById("zone");
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const hint = document.getElementById("hint");
+    const result = document.getElementById("result");
+    const confettiCanvas = document.getElementById("confettiCanvas");
+
+    let hasMoved = false;
+    let isVariantShown = false;
+
+    function resizeConfettiCanvas() {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      confettiCanvas.width = Math.floor(window.innerWidth * dpr);
+      confettiCanvas.height = Math.floor(window.innerHeight * dpr);
+      confettiCanvas.style.width = "100vw";
+      confettiCanvas.style.height = "100vh";
+    }
+
+    resizeConfettiCanvas();
+    window.addEventListener("resize", resizeConfettiCanvas);
+    window.addEventListener("orientationchange", () => setTimeout(resizeConfettiCanvas, 150));
+
+    const confettiInstance = confetti.create(confettiCanvas, {
+      resize: false,
+      useWorker: true
+    });
+
+    function fullScreenConfetti() {
+      const end = Date.now() + 1600;
+      (function frame() {
+        confettiInstance({
+          particleCount: 12,
+          spread: 90,
+          startVelocity: 45,
+          ticks: 180,
+          origin: { x: Math.random(), y: Math.random() * 0.3 }
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+      setTimeout(() => {
+        confettiInstance({
+          particleCount: 300,
+          spread: 140,
+          startVelocity: 60,
+          ticks: 220,
+          origin: { x: 0.5, y: 0.55 }
+        });
+      }, 300);
+    }
+
+    let yesScale = 1;
+    function growYes() {
+      yesScale = Math.min(2.2, yesScale + 0.1);
+      yesBtn.style.transform = `translate(-120%, -50%) scale(${yesScale})`;
+    }
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    const noVariants = ["🫣", "Yes?", "No?!", "Hehe", "😈", "…?", "👀"];
+    function showTextVariant() {
+      if (isVariantShown) return;
+      isVariantShown = true;
+      const randomText = noVariants[Math.floor(Math.random() * noVariants.length)];
+      noBtn.textContent = randomText;
+
+      setTimeout(() => {
+        noBtn.textContent = "No";
+        isVariantShown = false;
+      }, 1000);
+    }
+
+    function moveNo(clientX, clientY) {
+      const z = zone.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+
+      let dx = (b.left + b.width / 2) - clientX;
+      let dy = (b.top + b.height / 2) - clientY;
+      let mag = Math.hypot(dx, dy) || 1;
+      dx /= mag;
+      dy /= mag;
+
+      let newLeft = (b.left - z.left) + dx * 140;
+      let newTop = (b.top - z.top) + dy * 140;
+
+      newLeft = clamp(newLeft, 0, z.width - b.width);
+      newTop = clamp(newTop, 0, z.height - b.height);
+
+      noBtn.style.transition = "left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), " + "top  0.32s cubic-bezier(0.34, 1.56, 0.64, 1), " + "transform 0.18s ease-out";
+      noBtn.style.left = newLeft + "px";
+      noBtn.style.top = newTop + "px";
+      noBtn.style.transform = "scale(1.08) rotate(3deg)";
+
+      setTimeout(() => {
+        noBtn.style.transform = "scale(1) rotate(0deg)";
+      }, 180);
+
+      showTextVariant();
+
+      if (!hasMoved) {
+        hasMoved = true;
+        hint.style.opacity = 0.7;
+      }
+
+      growYes();
+    }
+
+    noBtn.addEventListener("pointerenter", e => {
+      moveNo(e.clientX, e.clientY);
+    });
+
+    noBtn.addEventListener("pointermove", e => {
+      const b = noBtn.getBoundingClientRect();
+      const d = Math.hypot(
+        (b.left + b.width / 2) - e.clientX,
+        (b.top + b.height / 2) - e.clientY
+      );
+      if (d < 140) moveNo(e.clientX, e.clientY);
+    });
+
+    noBtn.addEventListener("touchstart", e => {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        moveNo(touch.clientX, touch.clientY);
+      }
+    }, { passive: false });
+
+    noBtn.addEventListener("touchmove", e => {
+      e.preventDefault();
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const b = noBtn.getBoundingClientRect();
+        const d = Math.hypot(
+          (b.left + b.width / 2) - touch.clientX,
+          (b.top + b.height / 2) - touch.clientY
+        );
+        if (d < 140) moveNo(touch.clientX, touch.clientY);
+      }
+    }, { passive: false });
+
+    noBtn.addEventListener("click", e => e.preventDefault());
+    noBtn.addEventListener("touchend", e => e.preventDefault());
+
+    yesBtn.addEventListener("click", () => {
+      zone.style.display = "none";
+      hint.style.display = "none";
+      document.getElementById('question').style.display = "none";
+      result.style.display = "block";
+      resizeConfettiCanvas();
+      fullScreenConfetti();
+    });
+
+  </script>
+</body>
+
+</html>

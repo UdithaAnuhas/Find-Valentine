@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Valentine Visitors 💌</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Playfair Display', serif;
+            color: #fff;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: clamp(24px, 4vw, 38px);
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ff6b9d, #ff3b7a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #8899aa;
+            font-size: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px 32px;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #ff6b9d;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #8899aa;
+            margin-top: 4px;
+        }
+
+        .table-wrapper {
+            width: min(700px, 100%);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            overflow: hidden;
+            min-height: 100px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            background: rgba(255, 59, 122, 0.15);
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ff6b9d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        tbody td {
+            padding: 14px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 15px;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 107, 157, 0.06);
+        }
+
+        .name-cell {
+            font-weight: 700;
+        }
+
+        .time-cell {
+            color: #8899aa;
+            font-size: 13px;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #667788;
+        }
+
+        .empty-state span {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .actions {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4757, #c0392b);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.3);
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-back:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>💌 Valentine Visitors</h1>
+    <p class="subtitle">Everyone who visited your Valentine page</p>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="table-wrapper" id="tableWrapper">
+        <!-- Default Loading State (Static HTML) -->
+        <div class="empty-state">
+            <span>⏳</span>
+            <p>Connecting to Google Sheets...</p>
+        </div>
+    </div>
+
+    <div class="actions" id="actions">
+        <a href="index.html" class="btn btn-back">← Back to Valentine</a>
+    </div>
+
+    <!-- Error container -->
+    <div id="debuginfo" style="margin-top:20px; color: #ff6b9d; font-size:12px; max-width: 600px; text-align:center;">
+    </div>
+
+    <script>
+        // Global Error Handler for debugging
+        window.onerror = function (msg, url, line) {
+            document.getElementById('debuginfo').innerText = "⚠️ Javascript Error: " + msg + " (Line " + line + ")";
+            return false;
+        };
+
+        // Your URLs
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm_Qz4K82c5c3MjVAbyXZEhDIldCAgquk3XTLs7GhO999ydk0hpwonch4-U0LXst_2IQ/exec';
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ic_3UHhm0yGH_49Z8eY89Q3j8d-uwl0UHUMeLL4Za3w/edit?gid=0#gid=0';
+
+        const stats = document.getElementById('stats');
+        const tableWrapper = document.getElementById('tableWrapper');
+        const actions = document.getElementById('actions');
+
+        async function fetchVisitors() {
+            try {
+                // Fetch with redirect follow enabled
+                const response = await fetch(GOOGLE_SCRIPT_URL, { redirect: 'follow' });
+
+                if (!response.ok) throw new Error("HTTP " + response.status);
+
+                const visitors = await response.json();
+
+                if (!Array.isArray(visitors)) throw new Error("Invalid data format received");
+
+                renderPage(visitors);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+
+                // Fallback to local storage
+                const localVisitors = JSON.parse(localStorage.getItem('valentine_visitors') || '[]');
+
+                if (localVisitors.length > 0) {
+                    renderPage(localVisitors);
+                    document.getElementById('debuginfo').innerText = '⚠️ Showing local history (Cloud sync failed: ' + error.message + ')';
+                } else {
+                    tableWrapper.innerHTML = `
+                        <div class="empty-state">
+                            <span>⚠️</span>
+                            <p>Unable to load visitors.<br><small>${error.message}</small></p>
+                        </div>
+                    `;
+                    document.getElementById('debuginfo').innerHTML = `<button onclick="location.reload()" class="btn btn-back" style="font-size:12px; padding:8px 16px;">Try Again</button>`;
+                }
+            }
+        }
+
+        function renderPage(visitors) {
+            // Update Stats
+            stats.innerHTML = `
+              <div class="stat-card">
+                <div class="stat-number">${visitors.length}</div>
+                <div class="stat-label">Total Visitors</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number">${new Set(visitors.map(v => v.name ? v.name.toLowerCase() : '')).size}</div>
+                <div class="stat-label">Unique Names</div>
+              </div>
+            `;
+
+            // Update Table
+            if (visitors.length === 0) {
+                tableWrapper.innerHTML = `
+                <div class="empty-state">
+                  <span>🥺</span>
+                  <p>No visitors yet... share your Valentine link!</p>
+                </div>
+              `;
+            } else {
+                const sorted = [...visitors].reverse();
+                let rows = sorted.map((v, i) => `
+                <tr>
+                  <td style="color:#667788; width:50px;">${sorted.length - i}</td>
+                  <td class="name-cell">${escapeHtml(v.name || 'Unknown')}</td>
+                  <td class="time-cell">${escapeHtml(v.time || '-')}</td>
+                </tr>
+              `).join('');
+
+                tableWrapper.innerHTML = `
+                <table>
+                  <thead><tr><th>#</th><th>Name</th><th>Visited At</th></tr></thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              `;
+            }
+
+            // Update Actions
+            actions.innerHTML = `
+              <a href="index.html" class="btn btn-back">← Back to Valentine</a>
+              <button class="btn btn-danger" onclick="window.open('${SHEET_URL}', '_blank')">📂 View Google Sheet</button>
+            `;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Start
+        fetchVisitors();
+    </script>
+</body>
+
+</html>
